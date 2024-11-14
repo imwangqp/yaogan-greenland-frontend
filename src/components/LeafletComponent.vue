@@ -25,7 +25,7 @@ export default {
       const map = L.map('map-container', {
         minZoom: 3,
         maxZoom: 18,
-        center: [23.153021511848955, 114.49112893364192],
+        center: [23.153021511848955, 114.49112893364193],
         zoom: 13,
         attributionControl: false
       })
