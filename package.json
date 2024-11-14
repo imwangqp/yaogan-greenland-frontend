@@ -1,0 +1,30 @@
+{
+  "name": "city-green-space",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "axios": "^1.7.7",
+    "coordtransform": "^2.1.2",
+    "d3": "^7.9.0",
+    "element-plus": "^2.8.7",
+    "leaflet": "^1.9.4",
+    "leaflet.chinatmsproviders": "^3.0.6",
+    "lodash": "^4.17.21",
+    "mapvgl": "^1.0.0-beta.191",
+    "proj4": "^2.14.0",
+    "proj4leaflet": "^1.0.2",
+    "vue": "^3.5.12"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.1.4",
+    "unplugin-auto-import": "^0.18.3",
+    "unplugin-vue-components": "^0.27.4",
+    "vite": "^5.4.10"
+  }
+}
