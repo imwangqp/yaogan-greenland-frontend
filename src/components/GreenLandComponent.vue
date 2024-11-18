@@ -9,10 +9,8 @@ import * as L from "leaflet"
 import 'leaflet.chinatmsproviders'
 import {EPSG4326} from "leaflet/src/geo/crs/CRS.EPSG4326.js";
 
-import {ColorList} from "../util/global.js";
-
 export default {
-  name: "LeafletComponent",
+  name: "GreenLandComponent",
   mounted() {
     this.initMap()
     this.loadPolygons().then((polygons) => {
@@ -23,6 +21,7 @@ export default {
   },
   data() {
     return {
+      showPolygon: true,
       map: null,
       baseX: null,
       baseY: null,
@@ -30,8 +29,11 @@ export default {
     }
   },
   methods: {
+    // showPolygon(){
+    //   console.log(123)
+    // },
     initMap() {
-      const map = L.map('map-container', {
+      const map = L.map('map-container-2', {
         minZoom: 3,
         maxZoom: 18,
         center: [22.5445741, 114.0545429],
@@ -42,22 +44,40 @@ export default {
       })
       this.map = map
       L.tileLayer.chinaProvider('TianDiTu.Normal.Map', {maxZoom: 18, minZoom: 5}).addTo(map);
+
+      // axios({
+      //   url: '/api/coordinates',
+      //   params: {
+      //     Date: '2020-01-08'
+      //   }
+      // }).then(res => {
+      //   console.log(res)
+      //   const map = L.map('map-container', {
+      //     minZoom: 3,
+      //     maxZoom: 18,
+      //     center: [22.5445741, 114.0545429],
+      //     zoom: 13,
+      //     crs: L.CRS.Baidu
+      //   })
+      //   L.tileLayer.baidu({layer: 'vec'}).addTo(map)
+      //   for (let i = 0; i < res.data.length; i++) {
+      //     console.log(res.data[i]['Coordinates'])
+      //     const transformedCoordinates = res.data[i]['Coordinates'].map(coord => {
+      //       let [gcjLon, gcjLat] = wgs84togcj02(coord[0], coord[1]);
+      //       return gcj02tobd09(gcjLon, gcjLat);
+      //     });
+      //     const polygon = L.polygon(_.map(transformedCoordinates, i=>[i[1], i[0]])).addTo(map)
+      //   }
+      // })
     },
     initSvg(polygons) {
-
-
-
-      let that = this
-
-      const width = document.getElementById('svg-container').offsetWidth,
-          height = document.getElementById('svg-container').offsetHeight
-
       const svg = d3.select('#svg-container')
           .append('svg')
           .attr('width', document.getElementById('svg-container').offsetWidth)
           .attr('height', document.getElementById('svg-container').offsetHeight)
           .on('wheel', (event) => {
-            event.preventDefault();
+            event.preventDefault(); // 阻止页面滚动
+
             if (event.deltaY < 0) {
               this.map.zoomIn();
             } else if (event.deltaY > 0) {
@@ -71,8 +91,38 @@ export default {
         return [point.x, point.y];
       };
 
+      // 绘制多边形
+      const drawPolygons = () => {
+        svg.selectAll('path').remove(); // 清除之前的多边形
+
+        polygons.forEach(polygon => {
+          const path = d3.path();
+          polygon.forEach((point, i) => {
+            const [x, y] = projectPoint(point); // 将地理坐标转换为像素坐标
+            // console.log(`${point} ${x}, ${y}`);
+            if (i === 0) {
+              path.moveTo(x, y); // 起点
+            } else {
+              path.lineTo(x, y); // 连线
+            }
+          });
+          path.closePath(); // 闭合路径
+
+          svg.append('path')
+              .attr('d', path.toString())
+              .attr('fill', 'lightblue')
+              .attr('stroke', 'black')
+              .attr('stroke-width', 1);
+        });
+      };
+
+      // 初始绘制
+      drawPolygons();
+
+      // 添加拖动功能
       const drag = d3.drag()
           .on('drag', (event) => {
+            console.log(event)
             const dx = event.dx;
             const dy = event.dy;
             const currentCenter = this.map.getCenter();
@@ -80,50 +130,14 @@ export default {
                 this.map.latLngToContainerPoint(currentCenter).subtract([dx, dy])
             );
             this.map.setView(newCenter, this.map.getZoom(), { animate: false });
-            drawContour(); // 重新绘制多边形
+            drawPolygons(); // 重新绘制多边形
           });
 
       svg.call(drag); // 将拖动绑定到 SVG 容器
 
       // 监听地图缩放和拖动事件
-      this.map.on('zoom', drawContour);
-      this.map.on('move', drawContour);
-
-      function drawContour(){
-        svg.selectAll('.contour').remove()
-        const data = polygons.flatMap(polygon =>
-            polygon.map(([lng, lat]) => {
-              const point = that.map.latLngToContainerPoint([lat, lng]);
-              return {
-                x: point.x,
-                y: point.y,
-                value: Math.random() * 100 // 这里值可以是根据实际数据计算的
-              };
-            })
-        );
-
-        const contour = d3.contourDensity()
-            .x(d => d.x)
-            .y(d => d.y)
-            .size([width, height])
-            .thresholds(10)(data); // 设置等高线的阈值
-
-        const contourColorScale = d3.scaleSequential(['white', ColorList.contourBgColor])
-            .domain([
-              d3.min(contour, (d) => d.value) * 0.9,
-              d3.max(contour, (d) => d.value) * 1.1
-            ])
-
-        svg.selectAll('.contour')
-            .data(contour)
-            .enter().append('path')
-            .attr('class', 'contour')
-            .attr('d', d3.geoPath())
-            .attr('fill', d => contourColorScale(d.value))
-            .attr('opacity', 0.5);
-      }
-
-      drawContour()
+      this.map.on('zoom', drawPolygons);
+      this.map.on('move', drawPolygons);
     },
     async loadPolygons() {
       const response = await fetch('/output_polygon_vertices(1).txt');
@@ -162,8 +176,9 @@ export default {
 
 <template>
   <div class="full-container">
-    <div class="child-container" id="map-container"></div>
-    <div class="child-container" id="svg-container"></div>
+<!--    <el-switch v-model="showPolygon" size="small"/>-->
+    <div class="child-container" id="map-container-2"></div>
+    <div class="child-container" id="svg-container-2"></div>
   </div>
 </template>
 
@@ -182,12 +197,12 @@ export default {
   height: 100%;
 }
 
-#map-container {
+#map-container-2 {
   position: absolute; /* 或者 relative，具体取决于你的布局需求 */
   z-index: 1; /* 设置较小的 z-index 让它位于下面 */
 }
 
-#svg-container {
+#svg-container-2 {
   position: absolute; /* 或者 relative */
   z-index: 2; /* 设置较大的 z-index 让它位于上面 */
 }

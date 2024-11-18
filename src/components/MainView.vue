@@ -4,9 +4,10 @@ import {defineComponent} from "vue";
 import LeafletComponent from "./LeafletComponent.vue";
 import TestComponent from "./TestComponent.vue";
 import TimeController from "./TimeController.vue";
+import GreenLandComponent from "./GreenLandComponent.vue";
 
 export default defineComponent({
-  components: {TimeController, TestComponent, LeafletComponent}
+  components: {GreenLandComponent, TimeController, TestComponent, LeafletComponent}
 })
 </script>
 
@@ -14,7 +15,7 @@ export default defineComponent({
   <div class="container">
     <div class="box"><LeafletComponent /></div>
     <div class="box"><TimeController /></div>
-    <div class="box">Bottom Left</div>
+    <div class="box"><GreenLandComponent /></div>
     <div class="box">Bottom Right</div>
   </div>
 </template>
