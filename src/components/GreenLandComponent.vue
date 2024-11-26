@@ -12,11 +12,21 @@ import {EPSG4326} from "leaflet/src/geo/crs/CRS.EPSG4326.js";
 export default {
   name: "GreenLandComponent",
   mounted() {
-    this.initMap()
-    this.loadPolygons().then((polygons) => {
-      this.polygons = polygons
+    axios.get('api/coordinates_in_date', {
+      params: {Date: '2019-11-24'}
+    }).then(res => {
+      console.log(res)
+      this.initMap()
+      this.polygons  = _.map(res.data, item => item['Coordinates'])
+      console.log(this.polygons)
       this.initSvg(this.polygons);
-    });
+    })
+    // this.initMap()
+    // this.loadPolygons().then((polygons) => {
+    //   console.log(polygons)
+    //   this.polygons = polygons
+    //   this.initSvg(this.polygons);
+    // });
 
   },
   data() {
@@ -71,10 +81,10 @@ export default {
       // })
     },
     initSvg(polygons) {
-      const svg = d3.select('#svg-container')
+      const svg = d3.select('#svg-container-2')
           .append('svg')
-          .attr('width', document.getElementById('svg-container').offsetWidth)
-          .attr('height', document.getElementById('svg-container').offsetHeight)
+          .attr('width', document.getElementById('svg-container-2').offsetWidth)
+          .attr('height', document.getElementById('svg-container-2').offsetHeight)
           .on('wheel', (event) => {
             event.preventDefault(); // 阻止页面滚动
 
@@ -84,9 +94,8 @@ export default {
               this.map.zoomOut();
             }
           });
-
       // 坐标转换函数
-      const projectPoint = ([lng, lat]) => {
+      const projectPoint = ([lat, lng]) => {
         const point = this.map.latLngToContainerPoint([lat, lng]); // 转换为像素坐标
         return [point.x, point.y];
       };
@@ -99,7 +108,7 @@ export default {
           const path = d3.path();
           polygon.forEach((point, i) => {
             const [x, y] = projectPoint(point); // 将地理坐标转换为像素坐标
-            // console.log(`${point} ${x}, ${y}`);
+            console.log(`${point} ${x}, ${y}`);
             if (i === 0) {
               path.moveTo(x, y); // 起点
             } else {

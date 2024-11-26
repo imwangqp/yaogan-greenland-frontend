@@ -14,6 +14,14 @@ import {ColorList} from "../util/global.js";
 export default {
   name: "LeafletComponent",
   mounted() {
+    // axios.get('api/coordinates_in_date', {
+    //   params: {Date: '2019-11-24'}
+    // }).then(res => {
+    //   console.log(res)
+    //   this.initMap()
+    //   this.polygons = res.data
+    //   this.initSvg(this.polygons);
+    // })
     this.initMap()
     this.loadPolygons().then((polygons) => {
       this.polygons = polygons
@@ -101,6 +109,7 @@ export default {
               };
             })
         );
+        console.log(data)
 
         const contour = d3.contourDensity()
             .x(d => d.x)
